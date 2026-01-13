@@ -7,6 +7,7 @@ import IncidentModal from './components/IncidentModal';
 import EmptyState from './components/EmptyState';
 import LoadingSpinner from './components/LoadingSpinner';
 import LiveBadge from './components/LiveBadge';
+import logo from './img/logo.png';
 
 function App() {
   const {
@@ -48,9 +49,16 @@ function App() {
       <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-cyan-500/20">
         <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              Incidents Cyber
-            </h1>
+            <div className="flex items-center gap-3">
+              <img 
+                src={logo} 
+                alt="Cybnews Logo" 
+                className="h-10 sm:h-12 w-auto object-contain"
+              />
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                Cybnews
+              </h1>
+            </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="p-2 text-cyan-400 hover:text-cyan-300 transition-colors"
@@ -131,7 +139,7 @@ function App() {
       {/* Footer */}
       <footer className="mt-12 py-6 border-t border-cyan-500/20">
         <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-400 space-y-1">
-          <p>Cyber Security Tracker - Suivi des incidents de cybersécurité</p>
+          <p>Cybnews - Suivi des incidents de cybersécurité</p>
           <p className="text-xs text-gray-500">
             Données agrégées depuis : The Hacker News, Bleeping Computer, CERT-FR (ANSSI)
           </p>

@@ -1,4 +1,4 @@
-# Cyber Security Tracker
+# Cybnews
 
 Application React.js moderne pour suivre les incidents de cybersécurité mondiaux. Design Mobile First avec thème Cyber.
 
