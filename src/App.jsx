@@ -7,6 +7,7 @@ import IncidentModal from './components/IncidentModal';
 import EmptyState from './components/EmptyState';
 import LoadingSpinner from './components/LoadingSpinner';
 import LiveBadge from './components/LiveBadge';
+import ViewersCounter from './components/ViewersCounter'; // Import du nouveau compteur réel
 
 function App() {
   const {
@@ -41,33 +42,27 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#050507] text-white selection:bg-cyan-500/30">
-      {/* Badge LIVE */}
+      {/* Badge indicateur de nouveaux flux RSS */}
       <LiveBadge isVisible={hasNewIncidents} />
 
-      {/* En-tête avec titre centré et compteur de spectateurs à gauche */}
+      {/* Header avec grille à 3 colonnes pour le centrage */}
       <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-4xl mx-auto px-4 py-4 sm:py-5">
           <div className="grid grid-cols-3 items-center">
             
-            {/* GAUCHE : Compteur de spectateurs */}
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden sm:inline-block">
-                128 Spectateurs
-              </span>
+            {/* GAUCHE : Compteur de spectateurs connecté à la DB */}
+            <div className="flex items-center">
+              <ViewersCounter />
             </div>
 
-            {/* MILIEU : Titre centré (Logo supprimé) */}
+            {/* MILIEU : Titre Cybnews parfaitement centré */}
             <div className="text-center">
               <h1 className="text-xl sm:text-2xl font-black tracking-tighter bg-gradient-to-r from-white via-cyan-400 to-blue-500 bg-clip-text text-transparent uppercase inline-block">
                 Cybnews
               </h1>
             </div>
             
-            {/* DROITE : Bouton Filtre */}
+            {/* DROITE : Bouton Filtre interactif */}
             <div className="flex justify-end">
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -86,12 +81,15 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Contenu Principal */}
       <main className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+        
+        {/* Barre de Recherche */}
         <section className="relative z-20">
           <SearchBar searchText={searchText} setSearchText={setSearchText} />
         </section>
 
+        {/* Panneau de Filtres (Nettoyé du compteur simulé) */}
         {showFilters && !isLoading && (
           <section className="animate-in slide-in-from-top-4 fade-in duration-500">
             <FilterPanel
@@ -106,13 +104,14 @@ function App() {
           </section>
         )}
 
+        {/* Liste des flux d'incidents */}
         <section className="min-h-[400px]">
           {isLoading ? (
             <LoadingSpinner showSkeletons={true} />
           ) : error ? (
             <div className="bg-red-950/20 border border-red-500/30 rounded-2xl p-10 text-center animate-in zoom-in-95 duration-300">
-              <h3 className="text-red-400 text-lg font-bold mb-2 uppercase tracking-tight">Erreur</h3>
-              <p className="text-gray-400 text-sm">{error}</p>
+              <h3 className="text-red-400 text-lg font-bold mb-2 uppercase tracking-tight">Erreur de Sync</h3>
+              <p className="text-gray-400 text-sm max-w-xs mx-auto">{error}</p>
             </div>
           ) : incidents.length === 0 ? (
             <EmptyState />
@@ -130,15 +129,17 @@ function App() {
         </section>
       </main>
 
+      {/* Pied de page */}
       <footer className="mt-20 py-10 border-t border-white/5 bg-black/40">
         <div className="max-w-4xl mx-auto px-4 text-center space-y-4">
           <span className="font-black text-sm uppercase tracking-widest text-white opacity-50">Cybnews</span>
           <p className="text-[10px] text-gray-500 font-medium uppercase tracking-[0.2em]">
-            Surveillance en temps réel des menaces mondiales
+            Threat Intelligence Center - Veille Institutionnelle Mondiale
           </p>
         </div>
       </footer>
 
+      {/* Modale de détails */}
       <IncidentModal
         incident={selectedIncident}
         isOpen={isModalOpen}
