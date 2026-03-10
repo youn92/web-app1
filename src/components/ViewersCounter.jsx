@@ -1,34 +1,89 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+// ID unique par onglet/session (non persistant entre les rechargements)
+const SESSION_ID = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+const REDIS_URL = import.meta.env.VITE_UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = import.meta.env.VITE_UPSTASH_REDIS_REST_TOKEN;
+
+const redisCmd = async (...args) => {
+  const response = await fetch(REDIS_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${REDIS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(args),
+  });
+  if (!response.ok) throw new Error(`Redis error: ${response.status}`);
+  return response.json();
+};
+
+const PRESENCE_KEY = 'cybnews:viewers';
+const SESSION_TTL_MS = 60 * 1000;
+const HEARTBEAT_MS   = 25 * 1000;
+const POLL_MS        = 15 * 1000;
+
+const registerPresence = () =>
+  redisCmd('ZADD', PRESENCE_KEY, Date.now() + SESSION_TTL_MS, SESSION_ID);
+
+const fetchViewers = async () => {
+  await redisCmd('ZREMRANGEBYSCORE', PRESENCE_KEY, '-inf', Date.now() - 1);
+  const res = await redisCmd('ZCARD', PRESENCE_KEY);
+  return Math.max(1, res?.result ?? 1);
+};
+
+const removePresence = () =>
+  redisCmd('ZREM', PRESENCE_KEY, SESSION_ID).catch(() => {});
 
 const ViewersCounter = () => {
-  const [viewers, setViewers] = useState(0);
+  const [viewers, setViewers] = useState(1);
+  const heartbeatRef = useRef(null);
+  const pollRef = useRef(null);
 
   useEffect(() => {
-    const redisUrl = import.meta.env.VITE_UPSTASH_URL;
-    const redisToken = import.meta.env.VITE_UPSTASH_TOKEN;
-
-    const handleConnection = async () => {
+    const init = async () => {
       try {
-        // 1. Incrémenter le compteur global dans Redis
-        await fetch(`${redisUrl}/incr/cybnews_total_visits`, {
-          headers: { Authorization: `Bearer ${redisToken}` }
-        });
+        await registerPresence();
+        setViewers(await fetchViewers());
+      } catch (err) {
+        console.error('Erreur init présence:', err);
+      }
+    };
+    init();
 
-        // 2. Récupérer la valeur actuelle pour l'affichage
-        const response = await fetch(`${redisUrl}/get/cybnews_total_visits`, {
-          headers: { Authorization: `Bearer ${redisToken}` }
-        });
-        const data = await response.json();
-        
-        // On affiche la valeur ou 1 par défaut
-        setViewers(data.result ? parseInt(data.result) : 1);
-      } catch (error) {
-        console.error("Erreur base de données:", error);
-        setViewers(1); // Fallback si la DB est hors ligne
+    heartbeatRef.current = setInterval(async () => {
+      try { await registerPresence(); } catch (_) {}
+    }, HEARTBEAT_MS);
+
+    pollRef.current = setInterval(async () => {
+      try { setViewers(await fetchViewers()); } catch (_) {}
+    }, POLL_MS);
+
+    const onVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        try {
+          await registerPresence();
+          setViewers(await fetchViewers());
+        } catch (_) {}
       }
     };
 
-    handleConnection();
+    const onUnload = () => {
+      const body = JSON.stringify(['ZREM', PRESENCE_KEY, SESSION_ID]);
+      navigator.sendBeacon?.(REDIS_URL, new Blob([body], { type: 'application/json' }));
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('beforeunload', onUnload);
+
+    return () => {
+      clearInterval(heartbeatRef.current);
+      clearInterval(pollRef.current);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('beforeunload', onUnload);
+      removePresence();
+    };
   }, []);
 
   return (
@@ -38,10 +93,16 @@ const ViewersCounter = () => {
         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
       </span>
       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-        {viewers} Visiteurs cumulés
+        {viewers} en direct
       </span>
     </div>
   );
 };
 
 export default ViewersCounter;
+```
+
+Et vérifie aussi que ton `.env` contient bien ces deux noms de variables (pas les anciens) :
+```
+VITE_UPSTASH_REDIS_REST_URL="https://close-wolf-37976.upstash.io"
+VITE_UPSTASH_REDIS_REST_TOKEN="AZRYAAIncDIwMmIyYjQ0NmQzMjY0ODliOGJjOTc4ODViMzIwYTdkYXAyMzc5NzY"
