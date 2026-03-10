@@ -104,5 +104,5 @@ export default ViewersCounter;
 
 Et vérifie aussi que ton `.env` contient bien ces deux noms de variables (pas les anciens) :
 ```
-VITE_UPSTASH_REDIS_REST_URL="https://close-wolf-37976.upstash.io"
-VITE_UPSTASH_REDIS_REST_TOKEN="AZRYAAIncDIwMmIyYjQ0NmQzMjY0ODliOGJjOTc4ODViMzIwYTdkYXAyMzc5NzY"
+VITE_UPSTASH_REDIS_REST_URL="https://intense-hog-67738.upstash.io"
+VITE_UPSTASH_REDIS_REST_TOKEN="gQAAAAAAAQiaAAIncDExOWExNjI4NGI3NGM0MWZlYmIyODg4N2E1MDQ2MDMzMXAxNjc3Mzg"
